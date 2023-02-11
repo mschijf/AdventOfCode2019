@@ -1,8 +1,7 @@
 package adventofcode2019.december15
 
 import adventofcode2019.PuzzleSolverAbstract
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.*
 import kotlin.math.min
@@ -13,39 +12,35 @@ fun main() {
 
 class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(test, monthDay) {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun resultPartOne(): String = runBlocking() {
-        val intCodeProgram = IntCodeProgramCR( inputLines.first().split(",").map { it.toLong() } )
-        val job = async {
-            intCodeProgram.runProgram()
+    private val maze = initMaze()
+    private val oxygenSystemLocation = maze.entries.first { it.value == 2 }.key
+
+    private fun initMaze(): MutableMap<Pos, Int> = runBlocking{
+        val robot = IntCodeProgramCR( inputLines.first().split(",").map { it.toLong() } )
+        val job = launch {
+            robot.runProgram()
         }
-        val distance = solve(intCodeProgram, Pos(0,0), emptySet()).also {
+        val localmaze = mutableMapOf<Pos, Int>()
+        createMaze(localmaze, robot, Pos(0,0)).also {
             job.cancel()
         }
-
-       distance.toString()
+        localmaze
     }
 
-    private suspend fun solve(robot: IntCodeProgramCR, currentPos: Pos, nodesVisited: Set<Pos>): Int {
-        var shortestDistanceToEnd = 99999999
+    private suspend fun createMaze(maze: MutableMap<Pos, Int>, robot: IntCodeProgramCR, currentPos: Pos) {
         for (direction in WindDirection.values()) {
-            val result = doMove(robot, direction)
-            if (result == 2) {
-                shortestDistanceToEnd = 1
-                undoMove(robot, direction)
-                break
-            } else if (result == 1) {
-                val newPos = currentPos.moveOneStep(direction)
-                if (newPos !in nodesVisited) {
-                    val distanceToEnd = 1+solve(robot, newPos, nodesVisited + currentPos)
-                    shortestDistanceToEnd = min(shortestDistanceToEnd, distanceToEnd)
+            val newPos = currentPos.moveOneStep(direction)
+            if (!maze.contains(newPos)) {
+                val result = doMove(robot, direction)
+                if (result == 2 || result == 1) {
+                    maze[newPos] = result
+                    createMaze(maze, robot, newPos)
+                    undoMove(robot, direction)
+                } else {
+                    maze[newPos] = 0
                 }
-                undoMove(robot, direction)
-            } else {
-//                println("hit a wall")
             }
         }
-        return shortestDistanceToEnd
     }
 
     private suspend fun doMove(robot: IntCodeProgramCR, direction: WindDirection): Int {
@@ -57,11 +52,49 @@ class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(
         return doMove(robot, direction.opposite())
     }
 
+    //------------------------------------------------------------------------------------------------------------------
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun resultPartTwo(): String = runBlocking() {
-        "NIMP"
+    override fun resultPartOne(): String  {
+        return solve(Pos(0,0), emptySet()).toString()
     }
+
+    override fun resultPartTwo(): String {
+        fillMazeWithOxygen()
+        return (maze.values.max() - 2).toString()
+    }
+
+    private fun solve(currentPos: Pos, nodesVisited: Set<Pos>): Int {
+        if (currentPos == oxygenSystemLocation)
+            return 0
+
+        var shortestDistanceToEnd = 99999999
+        for (direction in WindDirection.values()) {
+            val newPos = currentPos.moveOneStep(direction)
+            if (maze[newPos] != 0 && newPos !in nodesVisited) {
+                val distanceToEnd = 1+solve(newPos, nodesVisited + currentPos)
+                shortestDistanceToEnd = min(shortestDistanceToEnd, distanceToEnd)
+            }
+        }
+        return shortestDistanceToEnd
+    }
+
+    private fun fillMazeWithOxygen() {
+        val queue: Queue<Pos> = LinkedList()
+        queue.add(oxygenSystemLocation)
+        while (queue.isNotEmpty()) {
+            val currentPos = queue.remove()
+            for (direction in WindDirection.values()) {
+                val newPos = currentPos.moveOneStep(direction)
+                if (maze[newPos] == 1) {
+                    maze[newPos] = maze[currentPos]!! + 1
+                    queue.add(newPos)
+                }
+            }
+        }
+    }
+
+
+
 }
 
 
