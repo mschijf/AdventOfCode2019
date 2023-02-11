@@ -1,6 +1,11 @@
+package adventofcode2019
+
+import com.adventofcode2019.Input
+
 abstract class PuzzleSolverAbstract (
-    val test: Boolean, val monthDay: Int? = null) {
-    private val dayOfMonth = if (monthDay == null) getDayOfMonthFromSubClassName() else monthDay
+    val test: Boolean,
+    monthDay: Int? = null) {
+    private val dayOfMonth = monthDay ?: getDayOfMonthFromSubClassName()
     protected val inputLines = Input(test, dayOfMonth).inputLines
 
     open fun resultPartOne(): String = "NOT IMPLEMENTED"

@@ -1,3 +1,5 @@
+package com.adventofcode2019.december11
+
 data class Pos(val x: Int, val y: Int) {
     fun moveOneStep(dir: Direction): Pos {
         return when (dir) {

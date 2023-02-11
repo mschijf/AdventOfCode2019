@@ -1,3 +1,5 @@
+package com.adventofcode2019
+
 import java.io.File
 
 class Input(test: Boolean, dayOfMonth: Int) {

@@ -1,3 +1,5 @@
+package adventofcode2019.december15
+
 import kotlinx.coroutines.channels.Channel
 
 class IntCodeProgramCR(baseIntCodeProgram: List<Long>) {
@@ -86,19 +88,15 @@ class IntCodeProgramCR(baseIntCodeProgram: List<Long>) {
     }
 
     private fun readParam(parameterNumber: Int) = intCodeProgram[getIndex(parameterNumber)]
+
+    inner class MutableMapLongCodeProgram2(baseMap: Map<Long, Long>) {
+        private val myMap = baseMap.toMutableMap()
+        operator fun get(index: Long): Long {
+            return myMap[index] ?: 0L
+        }
+        operator fun set(index: Long, value: Long) {
+            myMap[index] = value
+        }
+    }
 }
 
-class MutableMapLongCodeProgram2(baseMap: Map<Long, Long>) {
-    private val myMap = baseMap.toMutableMap()
-    operator fun get(index: Long): Long {
-        return myMap[index] ?: 0L
-    }
-    operator fun set(index: Long, value: Long) {
-        myMap[index] = value
-    }
-}
-
-interface IntCodeProgramIO {
-    fun write(output: Long)
-    fun read(): Long
-}

@@ -1,4 +1,7 @@
+package adventofcode2019.december13Coroutines
 
+import adventofcode2019.PuzzleSolverAbstract
+import adventofcode2019.december15.Pos
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -51,6 +54,31 @@ class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(
     }
 }
 
+
+//class RobotRemote(input: String): IntCodeProgramIO {
+//    private val intCodeProgram = IntCodeProgram( input.split(",").map { it.toLong() }, this )
+//
+//    fun run() {
+//        intCodeProgram.setMemoryFieldValue(0, 2)
+//        intCodeProgram.runProgram()
+//    }
+//
+//    override fun read(): Long {
+//        return -1
+//    }
+//
+//    override fun write(output: Long) {
+//    }
+//
+//    fun minimalSteps(): Long {
+//        return -1
+//    }
+//}
+
+//class PosStatus{
+//    val pos: Pos
+//    val distanceToStart: Long
+//}
 
 class Tile (x: Long, y: Long, val type: Long) {
     val pos = Pos(x.toInt(), y.toInt())
