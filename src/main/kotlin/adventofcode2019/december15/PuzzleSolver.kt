@@ -15,32 +15,31 @@ class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(
     private val maze = initMaze()
     private val oxygenSystemLocation = maze.entries.first { it.value == 2 }.key
 
-    private fun initMaze(): MutableMap<Pos, Int> = runBlocking{
-        val robot = IntCodeProgramCR( inputLines.first().split(",").map { it.toLong() } )
+    private fun initMaze(): MutableMap<Pos, Int> = runBlocking {
+        val robot = IntCodeProgramCR(inputLines.first().split(",").map { it.toLong() })
         val job = launch {
             robot.runProgram()
         }
-        val localmaze = mutableMapOf<Pos, Int>()
-        createMaze(localmaze, robot, Pos(0,0)).also {
+        createMaze(robot, Pos(0, 0)).also {
             job.cancel()
         }
-        localmaze
     }
 
-    private suspend fun createMaze(maze: MutableMap<Pos, Int>, robot: IntCodeProgramCR, currentPos: Pos) {
+    private suspend fun createMaze(robot: IntCodeProgramCR,
+                                   currentPos: Pos,
+                                   mazeSoFar: MutableMap<Pos, Int> = mutableMapOf()): MutableMap<Pos, Int> {
         for (direction in WindDirection.values()) {
             val newPos = currentPos.moveOneStep(direction)
-            if (!maze.contains(newPos)) {
+            if (!mazeSoFar.contains(newPos)) {
                 val result = doMove(robot, direction)
+                mazeSoFar[newPos] = result
                 if (result == 2 || result == 1) {
-                    maze[newPos] = result
-                    createMaze(maze, robot, newPos)
+                    createMaze(robot, newPos, mazeSoFar)
                     undoMove(robot, direction)
-                } else {
-                    maze[newPos] = 0
                 }
             }
         }
+        return mazeSoFar
     }
 
     private suspend fun doMove(robot: IntCodeProgramCR, direction: WindDirection): Int {
