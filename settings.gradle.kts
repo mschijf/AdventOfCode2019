@@ -1,3 +1,3 @@
 
-rootProject.name = "MyFirstCoroutines"
+rootProject.name = "AdventOfCode2019"
 
