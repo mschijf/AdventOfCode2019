@@ -20,10 +20,15 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
     }
 
     // start with analyze:
-    // on Xi, the number that we search will be equal to 1*Xi+1 + 1*Xi+2 + ... + 1*Xn
+    // For i >= totalSize /2 the following goes up:
+    //         on Xi, the number that we search will be equal to 1*Xi+1 + 1*Xi+2 + ... + 1*Xn
+    //         (since we will have i-1 0's and then 1 1's)
     // instead of calculating each number as the sum of all numbers from Xi, we can also start cumulating from the back
-    //   and that is exactly what fft_sum is doing
+    // and that is exactly what fft_sum is doing
     //
+    // finally I checked the offset in the input (5_978_017) which is bigger than half of 650*10_000 = 6_500_000
+    //
+
     override fun resultPartTwo(): String {
         val startString = inputLines.first()
         val msgOffset = startString.take(7).toInt()
