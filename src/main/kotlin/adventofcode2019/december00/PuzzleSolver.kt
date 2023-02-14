@@ -1,4 +1,4 @@
-package com.adventofcode2019.december00
+package adventofcode2019.december00
 
 import adventofcode2019.PuzzleSolverAbstract
 
