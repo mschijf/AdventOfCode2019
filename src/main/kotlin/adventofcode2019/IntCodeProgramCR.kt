@@ -1,4 +1,4 @@
-package adventofcode2019.december15
+package adventofcode2019
 
 import kotlinx.coroutines.channels.Channel
 

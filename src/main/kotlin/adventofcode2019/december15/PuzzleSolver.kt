@@ -1,5 +1,6 @@
 package adventofcode2019.december15
 
+import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking

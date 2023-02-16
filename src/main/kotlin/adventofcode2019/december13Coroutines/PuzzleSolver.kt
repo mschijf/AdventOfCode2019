@@ -1,5 +1,6 @@
 package adventofcode2019.december13Coroutines
 
+import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
 import adventofcode2019.december15.Pos
 import kotlinx.coroutines.ExperimentalCoroutinesApi
