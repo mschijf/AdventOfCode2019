@@ -8,4 +8,6 @@ data class ArrayPos(val row: Int, val col: Int) {
     fun moveOneStep(dir: WindDirection): ArrayPos {
         return ArrayPos(row+dir.dRow(), col+dir.dCol())
     }
+
+    fun neighbors() = Direction.values().map { dir -> Coordinate(row+dir.dRow(), col+dir.dCol()) }
 }
