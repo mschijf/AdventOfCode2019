@@ -2,6 +2,9 @@ package adventofcode2019.december17
 
 import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
+import adventofcode2019.position.ArrayPos
+import adventofcode2019.position.Direction
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.math.min
@@ -12,55 +15,34 @@ fun main() {
 
 class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(test, monthDay) {
 
-    private val view = View(inputLines.first())
+    private val scaffoldMap = ScaffoldMap(inputLines.first())
 
     override fun resultPartOne(): String {
-        return view.calculateCrosspointsSum().toString()
+        return scaffoldMap.calculateCrosspointsSum().toString()
     }
 
     override fun resultPartTwo(): String {
-        val path = view.makePath()
-        val movementFunctionList = view.makeBuckets(path, 0, 0)
-        val mainMovementRoutine = view.makeMainMovementRoutine(path, movementFunctionList)
+        val path = scaffoldMap.makePath()
+        val movementFunctionList = scaffoldMap.makeMovementFunctionList(path, 3, 10)
+        val mainMovementRoutine = scaffoldMap.makeMainMovementRoutine(path, movementFunctionList)
         println(path)
         println(mainMovementRoutine)
         movementFunctionList.forEachIndexed { index, movementFunction -> println("Function ${'A'+index}: $movementFunction") }
-        secondPart(mainMovementRoutine, movementFunctionList)
-        return "see ^^^"
+        val robot = Robot(inputLines.first())
+        val dustCollected = robot.walk(mainMovementRoutine, movementFunctionList)
+        return dustCollected.toString()
     }
-
-    private fun secondPart(mainMovementRoutine: String, movementFunctionList: List<String>) = runBlocking {
-        val program = IntCodeProgramCR(inputLines.first().split(",").map { it.toLong() })
-        program.setMemoryFieldValue(0, 2)
-        launch {
-
-            program.runProgram()
-        }
-        mainMovementRoutine.dropLast(1).map { it.code.toLong() }.forEach { program.input.send(it) }
-        program.input.send(10L)
-        movementFunctionList.forEach {movementFunction ->
-            movementFunction.dropLast(1).map { it.code.toLong() }.forEach { program.input.send(it) }
-            program.input.send(10L)
-        }
-        program.input.send(('n'.code).toLong())
-        program.input.send(10L)
-        while (!program.output.isClosedForReceive) {
-            val ch = program.output.receive()
-            print(if (ch < 255) ch.toInt().toChar() else ch)
-        }
-        println()
-    }
-
 }
 
-class View(inputLine: String) {
+@OptIn(ExperimentalCoroutinesApi::class)
+class ScaffoldMap(inputLine: String) {
 
     private val view: Array<CharArray>
-    private var robotPos: FlippedPos
+    private var robotPos: ArrayPos
     private var robotDir: Direction
 
     init {
-        robotPos = FlippedPos(0,0)
+        robotPos = ArrayPos(0,0)
         robotDir = Direction.LEFT
         view = Array(50) { CharArray(50) {' '} }
         runBlocking {
@@ -78,7 +60,7 @@ class View(inputLine: String) {
                     col = 0
                 } else  {
                     if (ch.toChar() in listOf('<', '>', '^', 'v')) {
-                        robotPos = FlippedPos(col, row)
+                        robotPos = ArrayPos(row, col)
                         robotDir = Direction.values().first{dir -> dir.directionChar == ch.toChar()}
                     }
                     view[row][col] = ch.toChar()
@@ -108,7 +90,7 @@ class View(inputLine: String) {
         var result = ""
         var rotateString = turnToScaffold()
         while (rotateString != "") {
-            val scaffoldLength = walkScaffold()
+            val scaffoldLength = walkStraightLine()
             result = "$result$rotateString,$scaffoldLength,"
             rotateString = turnToScaffold()
         }
@@ -117,22 +99,22 @@ class View(inputLine: String) {
 
     private fun turnToScaffold(): String {
         val turnLeftPos = robotPos.moveOneStep(robotDir.rotateLeft())
-        if (turnLeftPos.y in view.indices && turnLeftPos.x in view[turnLeftPos.y].indices && view[turnLeftPos.y][turnLeftPos.x] == '#') {
+        if (turnLeftPos.row in view.indices && turnLeftPos.col in view[turnLeftPos.row].indices && view[turnLeftPos.row][turnLeftPos.col] == '#') {
             robotDir = robotDir.rotateLeft()
             return "L"
         }
         val turnRightPos = robotPos.moveOneStep(robotDir.rotateRight())
-        if (turnRightPos.y in view.indices && turnRightPos.x in view[turnRightPos.y].indices && view[turnRightPos.y][turnRightPos.x] == '#') {
+        if (turnRightPos.row in view.indices && turnRightPos.col in view[turnRightPos.row].indices && view[turnRightPos.row][turnRightPos.col] == '#') {
             robotDir = robotDir.rotateRight()
             return "R"
         }
         return ""
     }
 
-    private fun walkScaffold(): Int {
+    private fun walkStraightLine(): Int {
         var steps = 0
         var nextPos = robotPos.moveOneStep(robotDir)
-        while (nextPos.y in view.indices && nextPos.x in view[nextPos.y].indices && view[nextPos.y][nextPos.x] == '#') {
+        while (nextPos.row in view.indices && nextPos.col in view[nextPos.row].indices && view[nextPos.row][nextPos.col] == '#') {
             robotPos = nextPos
             nextPos = robotPos.moveOneStep(robotDir)
             steps++
@@ -140,40 +122,46 @@ class View(inputLine: String) {
         return steps
     }
 
-    fun makeBuckets(wholeString: String, bucketTypesUsed: Int, bucketsUsed: Int, bucketsFilled: List<String> = emptyList()): List<String> {
-        if (wholeString.isEmpty()) {
-            if (bucketTypesUsed <= 3 && bucketsUsed <= 10)
-                return bucketsFilled
-            else
-                return emptyList()
-        }
-        if (bucketTypesUsed > 3 || bucketsUsed > 10)
-            return emptyList()
+    fun makeMovementFunctionList(path: String,
+                                 uniqueFunctionsToUse: Int,
+                                 totalFunctionsToUse: Int,
+                                 functionsList: List<String> = emptyList()): List<String> {
 
-        val possibleBuckets = createPossibleBuckets(wholeString, 20)
-        for (possibleBucket in possibleBuckets) {
-            val newString = wholeString.replace(possibleBucket, "")
-            val newBucketLength = (wholeString.length - newString.length) / possibleBucket.length
-            val bf = makeBuckets(newString, bucketTypesUsed+1, bucketsUsed + newBucketLength, bucketsFilled+possibleBucket)
-            if (bf.isNotEmpty())
-                return bf
+        if (uniqueFunctionsToUse <= 0 || totalFunctionsToUse <= 0) {
+            if (path.isEmpty()) {
+                return functionsList
+            }
+            return emptyList()
+        }         
+
+        val possibleFunctionList = createPossibleFunctions(path, 20)
+        for (possibleFunction in possibleFunctionList) {
+            val newString = path.replace(possibleFunction, "")
+            val possibleFunctionOccurences = (path.length - newString.length) / possibleFunction.length
+            val result = makeMovementFunctionList(
+                newString,
+                uniqueFunctionsToUse-1,
+                totalFunctionsToUse - possibleFunctionOccurences,
+                functionsList+possibleFunction)
+            if (result.isNotEmpty())
+                return result
         }
 
         return emptyList()
     }
 
-    private fun createPossibleBuckets(wholeString: String, maxLen: Int): List<String> {
-        var result = mutableListOf<String>()
-        for (i in 0 until min(wholeString.length, maxLen)) {
-            if (wholeString[i] == ',')
-                result.add(wholeString.substring(0,i+1))
+    private fun createPossibleFunctions(path: String, maxLen: Int): List<String> {
+        val result = mutableListOf<String>()
+        for (i in 0 until min(path.length, maxLen)) {
+            if (path[i] == ',')
+                result.add(path.substring(0,i+1))
         }
         return result
     }
 
-    fun makeMainMovementRoutine(wholeString: String, movementFunctionList: List<String>): String {
+    fun makeMainMovementRoutine(path: String, movementFunctionList: List<String>): String {
         var result = ""
-        var leftOver = wholeString
+        var leftOver = path
         while (leftOver.isNotEmpty()) {
             val index = movementFunctionList.indexOfFirst { leftOver.startsWith(it) }
             result = "$result${'A' + index},"
@@ -181,6 +169,35 @@ class View(inputLine: String) {
         }
         return result
     }
- }
+}
+
+class Robot(inputLine: String) {
+    private val program = IntCodeProgramCR(inputLine.split(",").map { it.toLong() })
+    init {
+        program.setMemoryFieldValue(0, 2)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun walk(mainMovementRoutine: String, movementFunctionList: List<String>):Long = runBlocking {
+        launch {
+            program.runProgram()
+        }
+        mainMovementRoutine.dropLast(1).map { it.code.toLong() }.forEach { program.input.send(it) }
+        program.input.send(10L)
+        movementFunctionList.forEach {movementFunction ->
+            movementFunction.dropLast(1).map { it.code.toLong() }.forEach { program.input.send(it) }
+            program.input.send(10L)
+        }
+        program.input.send(('n'.code).toLong())
+        program.input.send(10L)
+        var lastOutput = 0L
+        while (!program.output.isClosedForReceive) {
+            lastOutput = program.output.receive()
+            if (lastOutput < 255)
+                print(lastOutput.toInt().toChar())
+        }
+        lastOutput
+    }
+}
 
 
