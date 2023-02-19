@@ -47,9 +47,9 @@ class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(
         takePicture(computer)
     }
 
-    fun <T> Map<Coordinate, T>.print() {
-        val maxX = this.keys.maxBy { it.x }!!.x
-        val maxY = this.keys.maxBy { it.y }!!.y
+    private fun <T> Map<Coordinate, T>.print() {
+        val maxX = this.keys.maxBy { it.x }.x
+        val maxY = this.keys.maxBy { it.y }.y
 
         (0..maxY).forEach { y ->
             (0..maxX).forEach { x ->
@@ -59,6 +59,5 @@ class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(
         }
     }
 }
-
 
 
