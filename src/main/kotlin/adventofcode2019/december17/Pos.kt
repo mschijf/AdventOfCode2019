@@ -1,5 +1,15 @@
 package adventofcode2019.december17
 
+data class FlippedPos(val x: Int, val y: Int) {
+    fun moveOneStep(dir: Direction): FlippedPos {
+        return FlippedPos(x+dir.dX, y-dir.dY)
+    }
+
+    fun moveOneStep(dir: WindDirection): FlippedPos {
+        return FlippedPos(x+dir.dX, y-dir.dY)
+    }
+}
+
 data class Pos(val x: Int, val y: Int) {
     fun moveOneStep(dir: Direction): Pos {
         return Pos(x+dir.dX, y+dir.dY)
@@ -10,7 +20,7 @@ data class Pos(val x: Int, val y: Int) {
     }
 }
 
-enum class Direction(val dX: Int, val dY: Int, private val directionChar: Char) {
+enum class Direction(val dX: Int, val dY: Int, val directionChar: Char) {
     UP(0,1, '^') {
         override fun rotateRight() = RIGHT
         override fun rotateLeft() = LEFT
