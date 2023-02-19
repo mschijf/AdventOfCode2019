@@ -25,11 +25,13 @@ class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(
         val path = scaffoldMap.makePath()
         val movementFunctionList = scaffoldMap.makeMovementFunctionList(path, 3, 10)
         val mainMovementRoutine = scaffoldMap.makeMainMovementRoutine(path, movementFunctionList)
+        
         println(path)
         println(mainMovementRoutine)
         movementFunctionList.forEachIndexed { index, movementFunction -> println("Function ${'A'+index}: $movementFunction") }
+        
         val robot = Robot(inputLines.first())
-        val dustCollected = robot.walk(mainMovementRoutine, movementFunctionList)
+        val dustCollected = robot.visitAllScaffoldParts(mainMovementRoutine, movementFunctionList)
         return dustCollected.toString()
     }
 }
@@ -178,7 +180,7 @@ class Robot(inputLine: String) {
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun walk(mainMovementRoutine: String, movementFunctionList: List<String>):Long = runBlocking {
+    fun visitAllScaffoldParts(mainMovementRoutine: String, movementFunctionList: List<String>):Long = runBlocking {
         launch {
             program.runProgram()
         }
