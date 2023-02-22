@@ -28,7 +28,7 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
     }
 
     private val cache = HashMap<Pair<Coordinate, Set<Char>>, Int>()
-    private fun solve1(currentPos: Coordinate, distanceDone: Int = 0, bestSoFar: Int = 99999999, keysPicked :Set<Char> = emptySet()): Int {
+    private fun solve1(currentPos: Coordinate, keysPicked :Set<Char> = emptySet()): Int {
         if (keysPicked.size == doorKeys.size) {
             return 0
         }
@@ -40,48 +40,10 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
         }
 
         val keysToCatch = determineKeysToCatchFrom2(currentPos, keysPicked)
+        val bestDistanceFromHere = keysToCatch.minOf { key -> key.third + solve1(key.first,keysPicked+key.second)}
 
-//        val minDistanceToWalk = keysToCatch.maxOf{it.third}
-//        val keyCount = keysToCatch.size
-//        if (distanceDone+minDistanceToWalk+keyCount-1 >= bestSoFar) {
-//            return 99999999
-//        }
-//
-        var bestDistanceFromHere = 99999999
-        for (key in keysToCatch) {
-            val distanceFromHere = key.third + solve1(key.first, distanceDone+key.third, min(bestSoFar, distanceDone+bestDistanceFromHere), keysPicked+key.second)
-            if (distanceFromHere < bestDistanceFromHere) {
-                bestDistanceFromHere = distanceFromHere
-            }
-        }
         cache[cacheKey] = bestDistanceFromHere
         return bestDistanceFromHere
-    }
-
-    //
-    // Onderstaande was mijn eerste poging. Conceptueel hetzelfde als de tweede, maar tweede was sneller
-    // en daarmee was het wel haalbaar
-    //
-    private fun determineKeysToCatchFrom(aPos: Coordinate): List<Triple<Coordinate, Char, Int>> {
-        val walkFields = maze.filterValues{ch -> ch in ".@abcdefghijklmnopqrstuvwxyz"}
-
-        val result = mutableListOf<Triple<Coordinate, Char, Int>>()
-        val queue = ArrayDeque<Pair<Coordinate, Int>>()
-
-        val visited = mutableSetOf<Coordinate>()
-        queue.add(Pair(aPos, 0))
-        while (queue.isNotEmpty()) {
-            val currentPos = queue.pop()
-            visited.add(currentPos.first)
-            val posList = currentPos.first.neighbors().intersect(walkFields.keys.toSet())
-            (posList - visited).forEach {
-                if (walkFields[it]!! == '.' || walkFields[it]!! == '@')
-                    queue.add(Pair(it, currentPos.second + 1))
-                else
-                    result.add(Triple(it, walkFields[it]!!, currentPos.second + 1))
-            }
-        }
-        return result
     }
 
     private fun determineKeysToCatchFrom2(aPos: Coordinate, keysPicked:Set<Char>): List<Triple<Coordinate, Char, Int>> {
