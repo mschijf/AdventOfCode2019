@@ -3,7 +3,14 @@ package adventofcode2019.december18
 import adventofcode2019.PuzzleSolverAbstract
 import adventofcode2019.position.Coordinate
 import java.util.*
-import kotlin.math.min
+
+
+//
+// Oplossing alogoritmisch correct, maar performance technisch niet goed.
+// Met hulp van Todd Ginsberg' https://todd.ginsberg.com/post/advent-of-code/2019/day18/ zaken verbetert
+//
+// Voor helderheid twee solve alogoritmes. Verschil is dat bij de tweede een set van startpunten wordt meegegeven
+// en bij de eerste maar één punt.
 
 fun main() {
     PuzzleSolver(test=false).showResult()
@@ -11,24 +18,35 @@ fun main() {
 
 class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
-    private val maze = inputLines
-        .mapIndexed{y, row -> row.mapIndexed {x, cell -> Coordinate(x,y) to cell}}
-        .flatten()
-        .toMap()
-        .toMutableMap()
-    private val entrance = maze.filterValues { it == '@' }.keys.first()
+    private val maze = Maze.from(inputLines)
 
+    override fun resultPartOne(): String {
+        return maze.solve1().toString()
+    }
+
+    override fun resultPartTwo(): String {
+        return maze.solve2().toString()
+    }
+
+}
+
+class Maze(maze: Map<Coordinate, Char>) {
     private val doors = maze.filterValues { it.isUpperCase() }
     private val doorKeys = maze.filterValues { it.isLowerCase() }
     private val openSpaces = maze.filterValues { it != '#' }.map{it.key}.toSet()
+    private val entrance = maze.filterValues { it == '@' }.keys
 
-    override fun resultPartOne(): String {
-        maze.print()
-        return solve1(entrance).toString()
+    companion object {
+        fun from(inputLines: List<String>): Maze {
+            return Maze(inputLines
+                .mapIndexed{y, row -> row.mapIndexed {x, cell -> Coordinate(x,y) to cell}}
+                .flatten()
+                .toMap())
+        }
     }
 
     private val cache = HashMap<Pair<Coordinate, Set<Char>>, Int>()
-    private fun solve1(currentPos: Coordinate, keysPicked :Set<Char> = emptySet()): Int {
+    fun solve1(currentPos: Coordinate = entrance.first(), keysPicked :Set<Char> = emptySet()): Int {
         if (keysPicked.size == doorKeys.size) {
             return 0
         }
@@ -39,15 +57,41 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
             return cacheValue
         }
 
-        val keysToCatch = determineKeysToCatchFrom2(currentPos, keysPicked)
-        val bestDistanceFromHere = keysToCatch.minOf { key -> key.third + solve1(key.first,keysPicked+key.second)}
+        val keysToCatch = determineKeysToCatchFrom(currentPos, keysPicked)
+        val bestDistanceFromHere = keysToCatch.minOfOrNull { entry -> entry.distance + solve1(entry.to,keysPicked+entry.key)} ?: 0
 
         cache[cacheKey] = bestDistanceFromHere
         return bestDistanceFromHere
     }
 
-    private fun determineKeysToCatchFrom2(aPos: Coordinate, keysPicked:Set<Char>): List<Triple<Coordinate, Char, Int>> {
-        val result = mutableListOf<Triple<Coordinate, Char, Int>>()
+    private val cache2 = HashMap<Pair<Set<Coordinate>, Set<Char>>, Int>()
+    fun solve2(currentPosSet: Set<Coordinate> = entrance, keysPicked :Set<Char> = emptySet()): Int {
+        if (keysPicked.size == doorKeys.size) {
+            return 0
+        }
+
+        val cacheKey = Pair(currentPosSet, keysPicked)
+        val cacheValue = cache2[cacheKey]?:-1
+        if (cacheValue >= 0) {
+            return cacheValue
+        }
+
+        val keysToCatch = determineAllKeys(currentPosSet, keysPicked)
+        val bestDistanceFromHere = keysToCatch.minOfOrNull { entry ->
+            entry.distance + solve2(currentPosSet-entry.from+entry.to,keysPicked+entry.key)
+        } ?: 0
+
+        cache2[cacheKey] = bestDistanceFromHere
+        return bestDistanceFromHere
+    }
+
+
+    private fun determineAllKeys(from: Set<Coordinate>, keysPicked: Set<Char>): List<Move> {
+        return from.map { point -> determineKeysToCatchFrom(point, keysPicked)}.flatten()
+    }
+
+    private fun determineKeysToCatchFrom(aPos: Coordinate, keysPicked:Set<Char>): List<Move> {
+        val result = mutableListOf<Move>()
         val queue = ArrayDeque<Pair<Coordinate, Int>>()
 
         val visited = mutableSetOf<Coordinate>()
@@ -61,7 +105,7 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
                 val key = doorKeys[it]
                 if (door == null || door.lowercaseChar() in keysPicked) {
                     if (key != null && key !in keysPicked) {
-                        result.add(Triple(it, key, currentPos.second + 1))
+                        result.add(Move(aPos, it, key, currentPos.second + 1))
                     } else {
                         queue.add(Pair(it, currentPos.second + 1))
                     }
@@ -71,19 +115,5 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
         return result
     }
 
-
-    private fun <T> Map<Coordinate, T>.print() {
-        val maxX = this.keys.maxBy { it.x }.x
-        val maxY = this.keys.maxBy { it.y }.y
-
-        (0..maxY).forEach { y ->
-            (0..maxX).forEach { x ->
-                print(this.getOrDefault(Coordinate(x, y), ' '))
-            }
-            println()
-        }
-    }
-
+    data class Move(val from: Coordinate, val to: Coordinate, val key: Char, val distance: Int)
 }
-
-
