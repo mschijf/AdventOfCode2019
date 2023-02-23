@@ -18,13 +18,14 @@ fun main() {
 
 class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
-    private val maze = Maze.from(inputLines)
-
     override fun resultPartOne(): String {
+        val maze = Maze.from(inputLines)
         return maze.solve1().toString()
     }
 
     override fun resultPartTwo(): String {
+        setAlternativeInputSourcePostfix("_part2")
+        val maze = Maze.from(inputLines)
         return maze.solve2().toString()
     }
 

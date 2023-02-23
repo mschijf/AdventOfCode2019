@@ -1,12 +1,11 @@
 package adventofcode2019
 
-import com.adventofcode2019.Input
-
 abstract class PuzzleSolverAbstract (
     val test: Boolean,
     monthDay: Int? = null) {
     private val dayOfMonth = monthDay ?: getDayOfMonthFromSubClassName()
-    protected val inputLines = Input(test, dayOfMonth).inputLines
+    protected var inputLines = Input(test, dayOfMonth).inputLines
+        private set
 
     open fun resultPartOne(): String = "NOT IMPLEMENTED"
     open fun resultPartTwo(): String = "NOT IMPLEMENTED"
@@ -35,5 +34,9 @@ abstract class PuzzleSolverAbstract (
         val monthName = "december"
         val dayOfMonth = className.substringAfter(monthName).substringBefore(".")
         return dayOfMonth.toInt()
+    }
+
+    fun setAlternativeInputSourcePostfix(postFix: String) {
+        inputLines = Input(test, dayOfMonth, postFix).inputLines
     }
 }
