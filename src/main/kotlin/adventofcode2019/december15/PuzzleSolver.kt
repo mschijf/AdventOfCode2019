@@ -11,7 +11,7 @@ fun main() {
     PuzzleSolver(test=false).showResult()
 }
 
-class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(test, monthDay) {
+class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
     private val maze = initMaze()
     private val oxygenSystemLocation = maze.entries.first { it.value == 2 }.key

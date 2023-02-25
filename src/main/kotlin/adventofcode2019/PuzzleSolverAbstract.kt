@@ -1,11 +1,12 @@
 package adventofcode2019
 
 abstract class PuzzleSolverAbstract (
-    val test: Boolean,
-    monthDay: Int? = null) {
-    private val dayOfMonth = monthDay ?: getDayOfMonthFromSubClassName()
+    val test: Boolean) {
+
+    private val dayOfMonth = getDayOfMonthFromSubClassName()
     protected var inputLines = Input(test, dayOfMonth).inputLines
         private set
+    private var overriddenInput = false
 
     open fun resultPartOne(): String = "NOT IMPLEMENTED"
     open fun resultPartTwo(): String = "NOT IMPLEMENTED"
@@ -26,17 +27,23 @@ abstract class PuzzleSolverAbstract (
         val startTime = System.currentTimeMillis()
         val result = getResult()
         val timePassed = System.currentTimeMillis() - startTime
-        println("Result part $puzzlePart: $result (after ${timePassed / 1000}.${timePassed % 1000} sec)")
+        print("Result part $puzzlePart: $result (after ${timePassed / 1000}.${timePassed % 1000} sec)")
+        if (overriddenInput) println("<== Overridden input") else println()
     }
 
     private fun getDayOfMonthFromSubClassName(): Int {
         val className = this.javaClass.name
         val monthName = "december"
-        val dayOfMonth = className.substringAfter(monthName).substringBefore(".")
+        val dayOfMonth = className.substringAfter(monthName).take(2)
         return dayOfMonth.toInt()
     }
 
     fun setAlternativeInputSourcePostfix(postFix: String) {
+        overriddenInput = true
         inputLines = Input(test, dayOfMonth, postFix).inputLines
+    }
+    fun setDefaultInput() {
+        overriddenInput = false
+        inputLines = Input(test, dayOfMonth).inputLines
     }
 }

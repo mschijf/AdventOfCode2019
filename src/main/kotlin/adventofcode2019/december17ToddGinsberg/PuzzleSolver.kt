@@ -10,10 +10,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 fun main() {
-    PuzzleSolver(test=false, 17).showResult()
+    PuzzleSolver(test=false).showResult()
 }
 
-class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(test, monthDay) {
+class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
     override fun resultPartOne(): String {
         val scaffold = mapScaffold()

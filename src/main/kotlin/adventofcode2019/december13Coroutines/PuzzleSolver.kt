@@ -9,10 +9,10 @@ import kotlinx.coroutines.runBlocking
 import kotlin.math.sign
 
 fun main() {
-    PuzzleSolver(test=false, 13).showResult()
+    PuzzleSolver(test=false).showResult()
 }
 
-class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(test, monthDay) {
+class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun resultPartOne(): String = runBlocking() {

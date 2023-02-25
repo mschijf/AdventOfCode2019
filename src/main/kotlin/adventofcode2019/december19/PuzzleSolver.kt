@@ -11,7 +11,7 @@ fun main() {
     PuzzleSolver(test=false).showResult()
 }
 
-class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(test, monthDay) {
+class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
     override fun resultPartOne(): String {
         val drone = Drone(inputLines.first())

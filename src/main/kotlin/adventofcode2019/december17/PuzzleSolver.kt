@@ -13,7 +13,7 @@ fun main() {
     PuzzleSolver(test=false).showResult()
 }
 
-class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(test, monthDay) {
+class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
     private val scaffoldMap = ScaffoldMap(inputLines.first())
 
