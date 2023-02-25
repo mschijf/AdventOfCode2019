@@ -3,10 +3,9 @@ package adventofcode2019.december19
 import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
 import adventofcode2019.position.Coordinate
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlin.math.min
+import kotlin.math.max
 
 fun main() {
     PuzzleSolver(test=false).showResult()
@@ -21,19 +20,15 @@ class PuzzleSolver(test: Boolean, monthDay: Int? = null) : PuzzleSolverAbstract(
 
     override fun resultPartTwo(): String {
         val drone = Drone(inputLines.first())
-//        drone.print(115)
-        val upperLeft = drone.findUpperLeftSquare100()
+        val upperLeft = drone.findUpperLeftSquare(100)
         println(upperLeft)
         return (upperLeft.x * 10_000 + upperLeft.y).toString()
     }
 
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class Drone(inputLine: String) {
     private val programCode = inputLine.split(",").map { it.toLong() }
-
-    private fun getDroneOutput(pos: Coordinate) = getDroneOutput(pos.x, pos.y)
 
     private fun getDroneOutput(x: Int, y: Int) = runBlocking {
         val intCodeProgram = IntCodeProgramCR(programCode)
@@ -62,42 +57,35 @@ class Drone(inputLine: String) {
         }
     }
 
-    private fun findFirstXNextLine(pos: Coordinate): Coordinate {
-        for (y in pos.y + 1 .. pos.y+100) {
-            for (x in min(0, pos.x-1)..pos.x + 100) {
+    //
+    // assuming we have a pos, which is the most left '#' on a line
+    // go down 1, and check if there is alos a '#' (start with one position to th eleftm to be sure.
+    //            if not, keep wlaking to the right until we found one.
+    // if we don't found one after 1000 attempts (highly overrated), go down another line
+    // safety net after checking 1000 lines
+    private fun findFirstPosNextLine(pos: Coordinate): Coordinate {
+        for (y in pos.y + 1 .. pos.y+1000) {
+            for (x in max(0, pos.x-1)..pos.x + 1000) {
                 if (getDroneOutput(x, y) == 1) {
                     return Coordinate(x, y)
                 }
             }
         }
-        throw Exception("next affected point found within square of 10x10 from $pos")
+        throw Exception("next affected point not found within square of 1000x1000 from $pos")
     }
 
-    private fun findFirstYLineWith100(pos: Coordinate): Coordinate {
-        var nextPos = pos
-        while (getDroneOutput(nextPos.x+(SQUARESIZE-1), nextPos.y) != 1) {
-            nextPos = findFirstXNextLine(nextPos)
+
+    //
+    // go down, to find most left '#' on a line = bottomLeft
+    // check if upperRight is also '#'. If so, then we have a 100x100 square
+    // return the upperLeft
+    //
+    fun findUpperLeftSquare(squareSize: Int): Coordinate {
+        var bottomLeft = Coordinate(0, 0)
+        while (bottomLeft.y < squareSize-1 || getDroneOutput(bottomLeft.x+(squareSize-1), bottomLeft.y-(squareSize-1)) != 1) {
+            bottomLeft = findFirstPosNextLine(bottomLeft)
         }
-        return nextPos
-    }
-
-    private fun findBottomYLine(pos: Coordinate): Coordinate {
-        var nextPos = pos
-        while (getDroneOutput(nextPos.x, nextPos.y-(SQUARESIZE-1)) != 1 || getDroneOutput(nextPos.x+(SQUARESIZE-1), nextPos.y-(SQUARESIZE-1)) != 1) {
-            nextPos = findFirstXNextLine(nextPos)
-        }
-        return nextPos
-    }
-
-    fun findUpperLeftSquare100(): Coordinate {
-        val startPos= Coordinate(0,0)
-        var nextPos = findFirstYLineWith100(startPos)
-        nextPos = findBottomYLine(nextPos)
-        return Coordinate(nextPos.x, nextPos.y-(SQUARESIZE-1))
-    }
-
-    companion object {
-        const val SQUARESIZE = 100
+        return Coordinate(bottomLeft.x, bottomLeft.y-(squareSize-1))
     }
 
 }
