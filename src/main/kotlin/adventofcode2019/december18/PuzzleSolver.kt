@@ -1,7 +1,7 @@
 package adventofcode2019.december18
 
 import adventofcode2019.PuzzleSolverAbstract
-import adventofcode2019.position.Coordinate
+import tool.position.Coordinate
 import java.util.*
 
 

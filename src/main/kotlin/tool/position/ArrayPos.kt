@@ -1,4 +1,4 @@
-package adventofcode2019.position
+package tool.position
 
 data class ArrayPos(val row: Int, val col: Int) {
     fun moveOneStep(dir: Direction): ArrayPos {

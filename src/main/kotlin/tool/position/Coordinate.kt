@@ -1,7 +1,9 @@
-package adventofcode2019.position
+package tool.position
+
+import kotlin.math.absoluteValue
 
 data class Coordinate(val x: Int, val y: Int) {
-    fun plusXY(dx: Int, dy: Int) = Coordinate(x + dx, y+dy)
+    fun plusXY(dx: Int, dy: Int) = Coordinate(x+dx, y+dy)
 
     fun plusX(dx: Int) = plusXY(dx, 0)
     fun plusY(dy: Int) = plusXY(0, dy)
@@ -25,5 +27,7 @@ data class Coordinate(val x: Int, val y: Int) {
     fun southeast() = moveOneStep(WindDirection.SOUTHEAST)
     fun northwest() = moveOneStep(WindDirection.NORTHWEST)
     fun southwest() = moveOneStep(WindDirection.SOUTHWEST)
+
+    fun manhattanDistance(otherPos: Coordinate) = (otherPos.x - x).absoluteValue + (otherPos.y - y).absoluteValue
 }
 

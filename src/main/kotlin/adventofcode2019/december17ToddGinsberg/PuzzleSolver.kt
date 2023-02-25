@@ -2,7 +2,7 @@ package adventofcode2019.december17ToddGinsberg
 
 import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
-import adventofcode2019.position.Coordinate
+import tool.position.Coordinate
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList

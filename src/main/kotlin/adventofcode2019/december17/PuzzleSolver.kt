@@ -2,8 +2,8 @@ package adventofcode2019.december17
 
 import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
-import adventofcode2019.position.ArrayPos
-import adventofcode2019.position.Direction
+import tool.position.ArrayPos
+import tool.position.Direction
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking

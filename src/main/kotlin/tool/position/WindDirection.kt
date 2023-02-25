@@ -1,4 +1,4 @@
-package adventofcode2019.position
+package tool.position
 
 enum class WindDirection(val dX: Int, val dY: Int, val directionSymbol: String) {
     NORTH(0,1, "N") {

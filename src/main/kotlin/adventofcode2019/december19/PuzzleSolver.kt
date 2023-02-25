@@ -2,7 +2,7 @@ package adventofcode2019.december19
 
 import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
-import adventofcode2019.position.Coordinate
+import tool.position.Coordinate
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.math.max

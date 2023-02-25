@@ -1,4 +1,4 @@
-package adventofcode2019.position
+package tool.position
 
 enum class Direction(val dX: Int, val dY: Int, val directionChar: Char) {
     UP(0,1, '^') {
