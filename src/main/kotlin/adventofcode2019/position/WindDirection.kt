@@ -1,27 +1,43 @@
 package adventofcode2019.position
 
-enum class WindDirection(val dX: Int, val dY: Int, val directionNumber: Int) {
-    NORTH(0,1, 1) {
+enum class WindDirection(val dX: Int, val dY: Int, val directionSymbol: String) {
+    NORTH(0,1, "N") {
+        override fun rotateRight() = NORTHEAST
+        override fun rotateLeft() = NORTHWEST
+    },
+    SOUTH(0,-1, "S") {
+        override fun rotateRight() = SOUTHWEST
+        override fun rotateLeft() = SOUTHEAST
+    },
+    WEST(-1,0, "W") {
+        override fun rotateRight() = NORTHWEST
+        override fun rotateLeft() = SOUTHWEST
+    },
+    EAST(1,0, "E") {
+        override fun rotateRight() = SOUTHEAST
+        override fun rotateLeft() = NORTHEAST
+    },
+    NORTHEAST(1,1, "NE") {
         override fun rotateRight() = EAST
+        override fun rotateLeft() = NORTH
+    },
+    NORTHWEST(-1,1, "NW") {
+        override fun rotateRight() = NORTH
         override fun rotateLeft() = WEST
     },
-    SOUTH(0,-1, 2) {
-        override fun rotateRight() = WEST
+    SOUTHEAST(1,-1, "SE") {
+        override fun rotateRight() = SOUTH
         override fun rotateLeft() = EAST
     },
-    WEST(-1,0, 3) {
-        override fun rotateRight() = NORTH
+    SOUTHWEST(-1,-1, "SW") {
+        override fun rotateRight() = WEST
         override fun rotateLeft() = SOUTH
-    },
-    EAST(1,0, 4) {
-        override fun rotateRight() = SOUTH
-        override fun rotateLeft() = NORTH
     };
 
     abstract fun rotateRight(): WindDirection
     abstract fun rotateLeft(): WindDirection
-    override fun toString() = directionNumber.toString()
-    fun opposite() = rotateLeft().rotateLeft()
+    override fun toString() = directionSymbol
+    fun opposite() = rotateLeft().rotateLeft().rotateLeft().rotateLeft()
 
     fun dRow() = -dY
     fun dCol() = dX
