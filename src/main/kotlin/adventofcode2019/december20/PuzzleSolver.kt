@@ -14,12 +14,23 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
     override fun resultPartOne(): String {
         return maze.shortestPath().toString()
     }
+
+    override fun resultPartTwo(): String {
+        return maze.shortestPathLeveled().toString()
+    }
 }
 
 class Maze(
     private val mazeMap: Map<Coordinate, Set<Coordinate>>,
     private val start: Coordinate,
     private val end: Coordinate) {
+
+    private val minX = mazeMap.keys.minOf { it.x }
+    private val maxX = mazeMap.keys.maxOf { it.x }
+    private val minY = mazeMap.keys.minOf { it.y }
+    private val maxY= mazeMap.keys.maxOf { it.y }
+    private fun outsideBorder(c: Coordinate) = (c.x == minX || c.x == maxX || c.y == minY || c.y == maxY)
+
 
     fun shortestPath(): Int {
         val visited = mutableSetOf<Coordinate>()
@@ -39,6 +50,35 @@ class Maze(
         }
         return -1
     }
+
+    fun shortestPathLeveled(): Int {
+        val visited = mutableSetOf<Pair<Int,Coordinate>>()
+        val queue = ArrayDeque<Triple<Int, Coordinate, Int>>()
+        queue.add(Triple(0, start, 0))
+        while (queue.isNotEmpty()) {
+            val (level, currentPos, stepsDone) = queue.removeFirst()
+            if (level == 0 && currentPos == end) {
+                return stepsDone
+            }
+            visited += Pair(level, currentPos)
+            mazeMap[currentPos]!!
+                .forEach {
+                    val newLevel = level+levelDelta(currentPos, it)
+                    if (newLevel >= 0 && Pair(newLevel, it) !in visited)
+                        queue.add(Triple(newLevel, it, stepsDone+1))
+                }
+        }
+        return -1
+    }
+
+    private fun levelDelta(from: Coordinate, to: Coordinate): Int {
+        if (from.manhattanDistance(to) == 1) //regular passage
+            return 0
+        if (outsideBorder(to))       //from->to goes from inside to out
+            return 1
+        return -1                    //from->to goes from outside to in
+    }
+
 
     companion object {
         fun from (inputLines: List<String>): Maze {
