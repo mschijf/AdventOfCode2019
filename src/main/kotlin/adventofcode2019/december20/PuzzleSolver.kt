@@ -98,10 +98,9 @@ class Maze(
 
         private fun findPassages(inputLines: List<String>):List<Coordinate> {
             return inputLines
-                .mapIndexed { y, row -> row
-                    .mapIndexed { x, value -> if (value == '.') Coordinate(x,y) else null }
-                    .filterNotNull() }
-                .flatten()
+                .mapIndexed { y, row ->
+                    row.mapIndexedNotNull { x, value -> if (value == '.') Coordinate(x, y) else null }
+                }.flatten()
         }
 
         private fun findEntrancePorts(inputLines: List<String>) : Map<String, List<Coordinate>> {
