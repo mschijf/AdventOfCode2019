@@ -21,9 +21,12 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 }
 
 class Maze(
-    private val mazeMap: Map<Coordinate, Set<Coordinate>>,
+    private val passageMap: Map<Coordinate, Set<Coordinate>>,
+    private val beamPortMap: Map<String, Pair<Coordinate, Coordinate>>,
     private val start: Coordinate,
     private val end: Coordinate) {
+
+    private val mazeMap = findAllNeighbors(passageMap, beamPortMap)
 
     private val minX = mazeMap.keys.minOf { it.x }
     private val maxX = mazeMap.keys.maxOf { it.x }
@@ -31,6 +34,10 @@ class Maze(
     private val maxY= mazeMap.keys.maxOf { it.y }
     private fun outsideBorder(c: Coordinate) = (c.x == minX || c.x == maxX || c.y == minY || c.y == maxY)
 
+    private fun findAllNeighbors(passages: Map<Coordinate, Set<Coordinate>>, beamPorts: Map<String, Pair<Coordinate, Coordinate>>): Map<Coordinate, Set<Coordinate>> {
+        val beamPortMap = (beamPorts.values.map { it.first to it.second } + beamPorts.values.map { it.second to it.first }).toMap()
+        return passages.keys.associateWith{ passages[it]!! + if (beamPortMap[it] != null) listOf(beamPortMap[it]!!) else emptyList() }
+    }
 
     fun shortestPath(): Int {
         val visited = mutableSetOf<Coordinate>()
@@ -64,7 +71,7 @@ class Maze(
             mazeMap[currentPos]!!
                 .forEach {
                     val newLevel = level+levelDelta(currentPos, it)
-                    if (newLevel >= 0 && Pair(newLevel, it) !in visited)
+                    if (newLevel >= 0 && newLevel <= beamPortMap.size && Pair(newLevel, it) !in visited)
                         queue.add(Triple(newLevel, it, stepsDone+1))
                 }
         }
@@ -82,10 +89,11 @@ class Maze(
 
     companion object {
         fun from (inputLines: List<String>): Maze {
-            val passages = findPassages(inputLines)
+            val passagesSet = findPassages(inputLines).toSet()
             val entranceMap = findEntrancePorts(inputLines)
-            val neighborMap = findNeighbors(passages, entranceMap.filterValues { it.size == 2 })
-            return Maze(neighborMap, entranceMap["AA"]!!.first(), entranceMap["ZZ"]!!.first() )
+            val passageMap = passagesSet.associateWith{ (it.neighbors() intersect passagesSet) }
+            val beamPortMap = entranceMap.filterValues { it.size == 2 }.map{it.key to Pair(it.value[0], it.value[1])}.toMap()
+            return Maze(passageMap, beamPortMap, entranceMap["AA"]!!.first(), entranceMap["ZZ"]!!.first() )
         }
 
         private fun findPassages(inputLines: List<String>):List<Coordinate> {
@@ -126,11 +134,6 @@ class Maze(
             if (name !in this)
                 this[name] = mutableListOf()
             this[name]!!.add(coord)
-        }
-
-        private fun findNeighbors(passages: List<Coordinate>, entranceMap: Map<String, List<Coordinate>>): Map<Coordinate, Set<Coordinate>> {
-            val beamPortMap = (entranceMap.values.map { it[0] to it[1] } + entranceMap.values.map { it[1] to it[0] }).toMap()
-            return passages.associateWith{ (it.neighbors() intersect passages.toSet()) + if (beamPortMap[it] != null) listOf(beamPortMap[it]!!) else emptyList() }
         }
 
     }
