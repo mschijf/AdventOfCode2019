@@ -3,6 +3,7 @@ package adventofcode2019.december21
 import adventofcode2019.Input
 import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -29,7 +30,7 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 class Springdroid(inputLine: String, private val programNumber: Int) {
 
     private val intCodeProgram = IntCodeProgramCR( inputLine.split(",").map { it.toLong() } )
-    var result: Long = -1
+    private var result: Long = -1
 
     fun walk(): Long {
         runBlocking {
@@ -37,7 +38,7 @@ class Springdroid(inputLine: String, private val programNumber: Int) {
                 intCodeProgram.runProgram()
             }
             runProgram()
-            printOutput()
+            checkOutput(false)
         }
         return result
     }
@@ -52,14 +53,17 @@ class Springdroid(inputLine: String, private val programNumber: Int) {
         intCodeProgram.input.send(10L)
     }
 
-    private suspend fun printOutput() {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private suspend fun checkOutput(printOutput: Boolean) {
         while (!intCodeProgram.output.isClosedForReceive) {
             val output = intCodeProgram.output.receive()
             if (output > 255) {
-                //println(output)
+                if (printOutput)
+                    println(output)
                 result = output
             } else {
-                //print(output.toInt().toChar())
+                if (printOutput)
+                    print(output.toInt().toChar())
             }
         }
     }
