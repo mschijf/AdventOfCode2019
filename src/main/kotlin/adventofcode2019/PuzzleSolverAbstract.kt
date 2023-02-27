@@ -4,7 +4,10 @@ abstract class PuzzleSolverAbstract (
     val test: Boolean) {
 
     private val dayOfMonth = getDayOfMonthFromSubClassName()
-    protected var inputLines = Input(test, dayOfMonth).inputLines
+
+    private val fileName = if (test) "example" else "input"
+    private val path = String.format("data/december%02d", dayOfMonth)
+    protected var inputLines = Input(path, fileName).inputLines
         private set
     private var overriddenInput = false
 
@@ -40,10 +43,11 @@ abstract class PuzzleSolverAbstract (
 
     fun setAlternativeInputSourcePostfix(postFix: String) {
         overriddenInput = true
-        inputLines = Input(test, dayOfMonth, postFix).inputLines
+        inputLines = Input(path, fileName+postFix).inputLines
     }
+
     fun setDefaultInput() {
         overriddenInput = false
-        inputLines = Input(test, dayOfMonth).inputLines
+        inputLines = Input(path, fileName).inputLines
     }
 }
