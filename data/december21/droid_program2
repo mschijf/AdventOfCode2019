@@ -1,0 +1,11 @@
+# [ (B and not(C) ) and D ] or not(A)
+
+NOT C J
+AND B J
+
+AND D J
+
+NOT A T
+OR A J
+
+WALK

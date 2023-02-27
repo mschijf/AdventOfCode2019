@@ -1,0 +1,17 @@
+# [ { (B and C) or not(B or C) } and D ] or not(A)
+OR B T
+AND C T
+
+OR B J
+OR C J
+NOT J J
+
+OR T J
+
+AND D J
+
+NOT A T
+
+OR T J
+
+WALK

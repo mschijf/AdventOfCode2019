@@ -1,0 +1,11 @@
+# (B and not(C) ) or ( not(C) ) = B or not(C)  {... and d .. or not(a)}
+
+NOT C J
+OR B J
+
+AND D J
+
+NOT A T
+OR T J
+
+WALK
