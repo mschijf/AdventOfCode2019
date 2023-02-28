@@ -25,6 +25,22 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
         return "^^^^^"
     }
+
+    // the answer is in droid_program5
+    // haven't enterd it in the code, since it was copy-pasted.
+    override fun resultPartTwo(): String {
+        val options = listOf(5)
+        options.forEach {optionNumber ->
+            val springdroid = Springdroid(inputLines.first(), optionNumber)
+            val result = springdroid.run(true)
+            if (result >= 0) {
+                println("program $optionNumber reaches the end! It returns $result")
+            }
+        }
+
+        return "^^^^^"
+    }
+
 }
 
 class Springdroid(inputLine: String, private val programNumber: Int) {
@@ -32,20 +48,25 @@ class Springdroid(inputLine: String, private val programNumber: Int) {
     private val intCodeProgram = IntCodeProgramCR( inputLine.split(",").map { it.toLong() } )
     private var result: Long = -1
 
-    fun walk(): Long {
+    fun walk(printOutput: Boolean = false): Long = execute("WALK", printOutput)
+
+    fun run(printOutput: Boolean = false): Long = execute("RUN", printOutput)
+
+    private fun execute(goCommand: String, printOutput: Boolean): Long {
         runBlocking {
             launch {
                 intCodeProgram.runProgram()
             }
-            runProgram()
-            checkOutput(false)
+            runProgram(goCommand)
+            checkOutput(printOutput)
         }
         return result
     }
 
-    private suspend fun runProgram() {
+    private suspend fun runProgram(goCommand: String) {
         val program = Input("data/december21/", "droid_program$programNumber").inputLines
-        program.filter{it.isNotEmpty() && !it.startsWith("#")}.forEach { line -> sendInput(line) }
+        program.dropLast(1).filter{it.isNotEmpty() && !it.startsWith("#")}.forEach { line -> sendInput(line) }
+        sendInput(goCommand)
     }
 
     private suspend fun sendInput(s: String) {
