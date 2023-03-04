@@ -11,8 +11,8 @@ abstract class PuzzleSolverAbstract (
         private set
     private var overriddenInput = false
 
-    open fun resultPartOne(): String = "NOT IMPLEMENTED"
-    open fun resultPartTwo(): String = "NOT IMPLEMENTED"
+    open fun resultPartOne(): Any = "NOT IMPLEMENTED"
+    open fun resultPartTwo(): Any = "NOT IMPLEMENTED"
 
     fun showResult() {
 
@@ -22,8 +22,8 @@ abstract class PuzzleSolverAbstract (
         println("Input lines  : ${if (inputLines.isEmpty()) "NO INPUT!!" else inputLines.count()} ")
         println("---------------------------------")
 
-        printResult(1) { resultPartOne() }
-        printResult(2) { resultPartTwo() }
+        printResult(1) { resultPartOne().toString() }
+        printResult(2) { resultPartTwo().toString() }
     }
 
     private fun printResult(puzzlePart: Int, getResult: () -> String ) {
