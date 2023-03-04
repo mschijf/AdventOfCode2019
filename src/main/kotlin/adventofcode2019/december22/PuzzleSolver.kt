@@ -1,7 +1,6 @@
 package adventofcode2019.december22
 
 import adventofcode2019.PuzzleSolverAbstract
-import com.tool.math.gcd
 import java.math.BigInteger
 import kotlin.math.absoluteValue
 
@@ -49,9 +48,6 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
     private fun String.getBigInteger(): BigInteger =
         this.split(" ").last().toBigInteger()
 
-    private fun String.getLong(): Long =
-        this.split(" ").last().toLong()
-
     // result: 49174686993380
     //
     // Mmm, no clue what's happening here.
@@ -92,12 +88,12 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 abstract class ShuffleAction {
     companion object {
         fun from (actionLine: String): ShuffleAction {
-            if (actionLine == "deal into new stack") {
-                return DealIntoNewStack()
+            return if (actionLine == "deal into new stack") {
+                DealIntoNewStack()
             } else if (actionLine.startsWith("cut ")) {
-                return Cut(actionLine.substringAfter("cut ").toInt())
+                Cut(actionLine.substringAfter("cut ").toInt())
             } else if (actionLine.startsWith("deal with increment ")) {
-                return DealWithIncrement(actionLine.substringAfter("deal with increment ").toInt())
+                DealWithIncrement(actionLine.substringAfter("deal with increment ").toInt())
             } else {
                 throw Exception("Unexpected shuffle action")
             }
@@ -105,7 +101,6 @@ abstract class ShuffleAction {
     }
 
     abstract fun executeAction(cardDeck: Array<Int>)
-    abstract fun repetitionTillSame(cardDeckSize: Long): Long
     abstract fun nextIndex(index: Long, cardDeckSize: Long): Long
 }
 
@@ -116,10 +111,6 @@ class DealIntoNewStack: ShuffleAction() {
 
     override fun nextIndex(index: Long, cardDeckSize: Long): Long {
         return (cardDeckSize - 1) - index
-    }
-
-    override fun repetitionTillSame(cardDeckSize: Long): Long {
-        return 2
     }
 }
 
@@ -136,21 +127,6 @@ class DealWithIncrement(val increment: Int): ShuffleAction() {
     override fun nextIndex(index: Long, cardDeckSize: Long): Long {
         return index*increment % cardDeckSize
     }
-
-    override fun repetitionTillSame(cardDeckSize: Long): Long {
-        return logModulo(increment.toLong(), cardDeckSize)
-    }
-
-    private fun logModulo(base: Long, mod:Long): Long {
-        var power = 1L
-        var x = base
-        while (x != 1L) {
-             x = base*x % mod
-            power ++
-        }
-        return power
-    }
-
 }
 
 class Cut(val cutNumber: Int): ShuffleAction() {
@@ -172,11 +148,5 @@ class Cut(val cutNumber: Int): ShuffleAction() {
     override fun nextIndex(index: Long, cardDeckSize: Long): Long {
         return (cardDeckSize + index - cutNumber) % cardDeckSize
     }
-
-    override fun repetitionTillSame(cardDeckSize: Long): Long {
-        val gcd = gcd(cardDeckSize, cutNumber.toLong())
-        return cardDeckSize / gcd
-    }
-
 }
 
