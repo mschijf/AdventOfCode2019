@@ -2,14 +2,15 @@ package adventofcode2019.december23
 
 import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 
 fun main() {
     PuzzleSolver(test=false).showResult()
 }
 
+//
+// note this program prints the answer, but does not end.
+//
 class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
     override fun resultPartOne(): Any {
@@ -19,40 +20,45 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
     }
 }
 
+private const val DELAY_TIME = 1L
+
 class Network(inputLine: String) {
     private val computerList = (0 ..49).associateWith { number -> Computer(this, inputLine, number) }
     private var lastPacket = Packet(0,0)
 
     fun runNetwork() = runBlocking {
+        val launchList = mutableListOf<Job>()
         computerList.values.forEach {
-            launch {
+            val job = launch {
                 it.start()
             }
+            launchList.add(job)
         }
-        launch {
-            doNatControl()
-        }
+        doNatControl()
+        launchList.forEach { job -> job.join() }
     }
 
-    val ySet = mutableSetOf<Long>()
     private suspend fun doNatControl() {
+        val idleYValueSet = mutableSetOf<Long>()
         while (true) {
-            delay(10)
+            delay(DELAY_TIME)
             val allIdle = computerList.values.all { it.isIdle() }
             if (allIdle) {
-                if (lastPacket.y in ySet) {
-                    println("===================================== Sending seond time idle packet to 0: $lastPacket")
+                if (lastPacket.y in idleYValueSet) {
+                    println("Part2: Sending packet to address 0 with y-value second time 0: $lastPacket")
+                    break
                 }
                 computerList[0]!!.receivePackage(lastPacket)
-                ySet.add(lastPacket.y)
+                idleYValueSet.add(lastPacket.y)
             }
         }
     }
 
     fun sendPackage(address: Int, packet: Packet) {
-//        println("sending to address --> $address: $packet")
         if (address == 255) {
-//            println("===================================== message to NAT: $packet")
+            if (lastPacket == Packet(0,0)) {
+                println("Part1: First packet with address 255; y-value is: $packet")
+            }
             lastPacket = packet
         } else {
             computerList[address]!!.receivePackage(packet)
@@ -61,24 +67,24 @@ class Network(inputLine: String) {
 
 }
 
-class Computer(private val network: Network, inputLine: String, val number: Int) {
+class Computer(private val network: Network, inputLine: String, private val number: Int) {
 
     private val computer = IntCodeProgramCR(inputLine)
 
     private val queue = ArrayDeque<Packet>()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun start() = runBlocking {
         launch {
             computer.runProgram()
-            println("$number is done")
         }
-        computer.input.send(number.toLong())
 
         launch {
+            computer.input.send(number.toLong())
             while (!computer.output.isClosedForReceive) {
                 runQueue()
                 while (queue.isEmpty()) {
-                    delay(10)
+                    delay(DELAY_TIME)
                 }
             }
         }
@@ -90,15 +96,13 @@ class Computer(private val network: Network, inputLine: String, val number: Int)
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun isIdle(): Boolean {
-//        println("$number is asked for being idle")
         return queue.isEmpty() && computer.output.isEmpty && computer.input.isEmpty
     }
 
     private suspend fun runQueue() {
-//        println("$number runs runQueue (size: ${queue.size})")
         while (queue.isNotEmpty()) {
-//            println("$number has items on queue (size: ${queue.size})")
             val packet = queue.removeFirst()
             computer.input.send(packet.x)
             computer.input.send(packet.y)
@@ -107,14 +111,12 @@ class Computer(private val network: Network, inputLine: String, val number: Int)
     }
 
     fun receivePackage(packet: Packet) {
-//        println("$number gets incoming message: $packet")
         queue.add(packet)
     }
 
     private suspend fun sendPackage() {
         val address = computer.output.receive().toInt()
         val packet = Packet(computer.output.receive(), computer.output.receive())
-//        println("from $number to $address, $packet")
         network.sendPackage(address, packet)
     }
 
