@@ -3,6 +3,8 @@ package adventofcode2019
 import kotlinx.coroutines.channels.Channel
 
 class IntCodeProgramCR(baseIntCodeProgram: List<Long>) {
+    constructor(inputLine: String): this(inputLine.split(",").map { it.toLong() })
+
     private val intCodeProgram = MutableMapLongCodeProgram2(baseIntCodeProgram.mapIndexed { index, l ->  Pair(index.toLong(), l)}.toMap())
 
     private var currentIndex = 0L

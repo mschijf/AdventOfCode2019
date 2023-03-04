@@ -8,6 +8,9 @@ fun main() {
 
 class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
+    override fun resultPartOne(): Any {
+        return super.resultPartOne()
+    }
 }
 
 
