@@ -3,6 +3,8 @@ package adventofcode2019.december23
 import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 
 fun main() {
     PuzzleSolver(test=false).showResult()
@@ -23,7 +25,7 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 private const val DELAY_TIME = 1L
 
 class Network(inputLine: String) {
-    private val computerList = (0 ..49).associateWith { number -> Computer(this, inputLine, number) }
+    private val computerList = (0 ..49).associateWith { number -> Computer(inputLine, this, number) }
     private var lastPacket = Packet(0,0)
 
     fun runNetwork() = runBlocking {
@@ -35,7 +37,7 @@ class Network(inputLine: String) {
             launchList.add(job)
         }
         doNatControl()
-        launchList.forEach { job -> job.join() }
+        launchList.forEach { job -> job.cancel() }
     }
 
     private suspend fun doNatControl() {
@@ -54,7 +56,7 @@ class Network(inputLine: String) {
         }
     }
 
-    fun sendPackage(address: Int, packet: Packet) {
+    suspend fun sendPackage(address: Int, packet: Packet) {
         if (address == 255) {
             if (lastPacket == Packet(0,0)) {
                 println("Part1: First packet with address 255; y-value is: $packet")
@@ -64,61 +66,48 @@ class Network(inputLine: String) {
             computerList[address]!!.receivePackage(packet)
         }
     }
-
 }
 
-class Computer(private val network: Network, inputLine: String, private val number: Int) {
+class Computer(
+    inputLine: String,
+    private val network: Network,
+    private val number: Int) {
 
     private val computer = IntCodeProgramCR(inputLine)
+    private val queue = Channel<Packet>(UNLIMITED)
 
-    private val queue = ArrayDeque<Packet>()
-
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun start() = runBlocking {
         launch {
             computer.runProgram()
         }
+        computer.input.send(number.toLong())
+        computer.input.send(-1L)
 
         launch {
-            computer.input.send(number.toLong())
-            while (!computer.output.isClosedForReceive) {
-                runQueue()
-                while (queue.isEmpty()) {
-                    delay(DELAY_TIME)
-                }
+            while (true) {
+                val address = computer.output.receive().toInt()
+                val packet = Packet(computer.output.receive(), computer.output.receive())
+                //println("Sending from $number to $address : $packet")
+                network.sendPackage(address, packet)
             }
         }
 
-        launch {
-            while (!computer.output.isClosedForReceive) {
-                sendPackage()
-            }
+        while (true) {
+            val packet = queue.receive()
+            computer.input.send(packet.x)
+            computer.input.send(packet.y)
         }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun isIdle(): Boolean {
-        return queue.isEmpty() && computer.output.isEmpty && computer.input.isEmpty
+        return queue.isEmpty && computer.output.isEmpty && computer.input.isEmpty
     }
 
-    private suspend fun runQueue() {
-        while (queue.isNotEmpty()) {
-            val packet = queue.removeFirst()
-            computer.input.send(packet.x)
-            computer.input.send(packet.y)
-        }
-        computer.input.send(-1L)
+    suspend fun receivePackage(packet: Packet) {
+        queue.send(packet)
     }
 
-    fun receivePackage(packet: Packet) {
-        queue.add(packet)
-    }
-
-    private suspend fun sendPackage() {
-        val address = computer.output.receive().toInt()
-        val packet = Packet(computer.output.receive(), computer.output.receive())
-        network.sendPackage(address, packet)
-    }
 
 }
 
