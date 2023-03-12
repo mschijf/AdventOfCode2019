@@ -1,0 +1,32 @@
+south
+take mutex
+south
+#take manifold
+west
+west
+take klein bottle
+east
+east
+north
+east
+take mug
+east
+take polygon
+north
+#take loom
+north
+take hypercube
+south
+south
+east
+east
+east
+#take pointer
+south
+west
+#drop mug
+#drop hypercube
+drop polygon
+#drop mutex
+#drop klein bottle
+west
