@@ -3,10 +3,7 @@ package adventofcode2019.december25
 import adventofcode2019.Input
 import adventofcode2019.IntCodeProgramCR
 import adventofcode2019.PuzzleSolverAbstract
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import java.util.*
 
 fun main() {
@@ -31,20 +28,22 @@ fun main() {
 
 class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
 
-    private val scanner = Scanner(System.`in`)
     private val computer = IntCodeProgramCR(inputLines.first())
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun resultPartOne(): Any = runBlocking {
         launch {
             computer.runProgram()
         }
 
         launch {
-            executeCommandFile()
-            while (true) {
+//            executeCommandFile()
+            while (!computer.output.isClosedForReceive) {
                 showOutput()
-                val cmd = getConsoleInput()
-                sendInput(cmd)
+                if (!computer.output.isClosedForReceive) {
+                    val cmd = getConsoleInput()
+                    sendInput(cmd)
+                }
             }
         }
 
@@ -59,14 +58,21 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
         }
     }
 
+    private suspend fun sendInput(s: String) {
+        s.forEach { ch -> computer.input.send(ch.code.toLong()) }
+        computer.input.send(10L)
+        delay(10)
+    }
+
+
+
     private suspend fun executeCommandFile() {
         val cmdList = Input("data/december25/", "commands").inputLines
         cmdList.filter{!it.startsWith("#")}.forEach { cmd -> sendInput(cmd) }
     }
 
-
     private fun getConsoleInput(): String {
-        return when (val consoleInput = scanner.nextLine()) {
+        return when (val consoleInput = readLine()) {
             "s" -> "south"
             "n" -> "north"
             "w" -> "west"
@@ -83,16 +89,9 @@ class PuzzleSolver(test: Boolean) : PuzzleSolverAbstract(test) {
             "dh" -> "drop hypercube"
             "dx" -> "drop mutex"
 
-            else -> consoleInput
+            else -> consoleInput?:""
         }
     }
-
-    private suspend fun sendInput(s: String) {
-        s.forEach { ch -> computer.input.send(ch.code.toLong()) }
-        computer.input.send(10L)
-        delay(10)
-    }
-
 }
 
 
